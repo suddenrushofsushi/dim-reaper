@@ -163,6 +163,73 @@ struct OverlayWindowControllerTests {
                 seconds * 10))
     }
 
+    @Test
+    func sameProcessNormalWindowOccludesButFloatingPanelDoesNot() async throws {
+        let height = try #require(NSScreen.screens.first).frame.maxY
+        let origin = try #require(NSScreen.screens.first).visibleFrame.origin
+        let targetFrame = CGRect(x: origin.x + 40, y: origin.y + 80, width: 43, height: 37)
+        let controlFrame = CGRect(x: origin.x + 140, y: origin.y + 180, width: 47, height: 41)
+        let overlayFrame = CGRect(x: origin.x + 240, y: origin.y + 280, width: 53, height: 45)
+
+        let targetWindow = NSWindow(
+            contentRect: targetFrame, styleMask: [.borderless], backing: .buffered, defer: false)
+        let controlWindow = NSWindow(
+            contentRect: controlFrame, styleMask: [.borderless], backing: .buffered, defer: false)
+        let overlayPanel = NSPanel(
+            contentRect: overlayFrame, styleMask: [.borderless], backing: .buffered, defer: false)
+        defer {
+            overlayPanel.close()
+            controlWindow.close()
+            targetWindow.close()
+        }
+
+        targetWindow.level = .normal
+        controlWindow.level = .normal
+        overlayPanel.level = .floating
+        targetWindow.orderBack(nil)
+        controlWindow.orderFrontRegardless()
+        overlayPanel.orderFrontRegardless()
+
+        var targetID: CGWindowID?
+        for _ in 0..<50 {
+            let rows =
+                CGWindowListCopyWindowInfo(.optionOnScreenOnly, kCGNullWindowID) as? [[String: Any]]
+                ?? []
+            targetID = rows.first { row in
+                guard
+                    (row[kCGWindowOwnerPID as String] as? NSNumber)?.int32Value
+                        == ProcessInfo.processInfo.processIdentifier,
+                    let dictionary = row[kCGWindowBounds as String] as? [String: Any]
+                else { return false }
+                var quartzFrame = CGRect.zero
+                return CGRectMakeWithDictionaryRepresentation(
+                    dictionary as CFDictionary, &quartzFrame)
+                    && WindowGeometry.appKitRect(
+                        from: quartzFrame, primaryScreenHeight: height) == targetFrame
+            }.flatMap { ($0[kCGWindowNumber as String] as? NSNumber)?.uint32Value }
+            if targetID != nil { break }
+            try await Task.sleep(for: .milliseconds(20))
+        }
+
+        let target = WindowTarget(
+            id: try #require(targetID),
+            ownerPID: ProcessInfo.processInfo.processIdentifier,
+            appName: "Nightprism",
+            title: "target window",
+            frame: targetFrame
+        )
+        guard
+            case .visible(let snapshot) = await SystemWindowSnapshotProvider().snapshot(
+                for: target, primaryScreenHeight: height)
+        else {
+            Issue.record("Expected metadata for the real target window")
+            return
+        }
+
+        #expect(snapshot.occluders.contains(controlFrame))
+        #expect(!snapshot.occluders.contains(overlayFrame))
+    }
+
     private func makeTarget() -> WindowTarget {
         WindowTarget(
             id: 42,

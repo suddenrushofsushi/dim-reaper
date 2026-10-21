@@ -57,7 +57,13 @@ actor SystemWindowSnapshotProvider: WindowSnapshotProviding {
         }
 
         let occluders = aboveInfo.compactMap { row -> CGRect? in
-            guard ownerPID(row) != getpid(), alpha(row) > 0,
+            // Overlay panels must not mask themselves. Our normal controls window still
+            // covers the target and must participate in occlusion like any other window.
+            let isOwnOverlay =
+                ownerPID(row) == getpid()
+                && (row[kCGWindowLayer as String] as? NSNumber)?.intValue
+                    == Int(CGWindowLevelForKey(.floatingWindow))
+            guard !isOwnOverlay, alpha(row) > 0,
                 let quartzBounds = bounds(row)
             else { return nil }
             let frame = WindowGeometry.appKitRect(
@@ -195,6 +201,7 @@ final class WindowTracker: WindowTracking {
 
         return content.windows.compactMap { window in
             guard window.windowID != 0,
+                window.windowLayer == Int(CGWindowLevelForKey(.normalWindow)),
                 let application = window.owningApplication,
                 application.processID != getpid(),
                 let title = window.title?.trimmingCharacters(in: .whitespacesAndNewlines),
