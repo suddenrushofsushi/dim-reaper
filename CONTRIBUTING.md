@@ -37,6 +37,7 @@ swift format lint --strict --recursive Sources Tests
 Before reporting a change that affects app behavior, run the app and check the relevant behavior. The following areas need real interactive checks:
 
 - Add an overlay from the menu bar.
+- Close and reopen the persistent controls window from the menu bar; keep it open while interacting with the target app.
 - Select a Safari/Zoom target after granting window access; verify click-through by default.
 - Compare dimming and warmth on a white background, dark text, and already-dark regions.
 - Enter editing mode, crop the rectangle, then confirm its crop scales as the target resizes.

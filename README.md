@@ -37,6 +37,8 @@ There are no third-party runtime dependencies. Choosing a foreign window require
 access so ScreenCaptureKit can list its title and identity. This prototype reads window metadata;
 it does not start a capture stream, record images, or upload screen content. Free-standing rectangles
 work without that permission.
+Local ad hoc rebuilds can invalidate a previous grant; reauthorize the current build in System Settings
+and relaunch if the chooser still requests access after a rebuild.
 
 ## Build and run
 
@@ -58,6 +60,8 @@ open Nightprism.xcodeproj
 ```
 
 Run the `Nightprism` scheme in Xcode. The app has a moon icon in the menu bar and no Dock icon.
+Controls open in a normal window at launch, so they stay available while working in Safari or Zoom.
+Close that window to keep only the menu bar controls; **Open Controls** in the moon menu reopens it.
 
 1. Click **Choose Window**. Grant window access when requested, then refresh or relaunch if needed.
 2. Select the Safari light-mode window or a Zoom meeting window. The overlay starts click-through.

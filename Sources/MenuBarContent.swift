@@ -3,6 +3,8 @@ import SwiftUI
 
 struct MenuBarContent: View {
     @Bindable var store: OverlayStore
+    var showsOpenControls = true
+    @Environment(\.openWindow) private var openWindow
     @State private var showsWindowPicker = false
     @State private var windows: [WindowTarget] = []
     @State private var isLoading = false
@@ -43,12 +45,22 @@ struct MenuBarContent: View {
                         }
                     }
                 }
-                .frame(maxHeight: 400)
+                .frame(height: min(400, CGFloat(store.overlays.count) * 220))
             }
 
             Divider()
-            Button("Quit Nightprism") { NSApplication.shared.terminate(nil) }
-                .keyboardShortcut("q")
+            HStack {
+                if showsOpenControls {
+                    Button("Open Controls") {
+                        openWindow(id: "controls")
+                        NSApplication.shared.activate(ignoringOtherApps: true)
+                    }
+                    .keyboardShortcut(",")
+                }
+                Spacer()
+                Button("Quit Nightprism") { NSApplication.shared.terminate(nil) }
+                    .keyboardShortcut("q")
+            }
         }
         .padding(14)
         .frame(width: 390)
@@ -101,7 +113,7 @@ struct MenuBarContent: View {
                         }
                     }
                 }
-                .frame(maxHeight: 180)
+                .frame(height: 180)
             }
         }
         .padding(8)
