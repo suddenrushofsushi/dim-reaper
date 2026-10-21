@@ -1,7 +1,8 @@
 import AppKit
 
 @MainActor
-final class OverlayWindowController: NSWindowController, NSWindowDelegate {
+final class OverlayWindowController: NSWindowController, NSWindowDelegate, OverlayWindowControlling
+{
     private let id: Overlay.ID
     private weak var store: OverlayStore?
     private let tintView: MetalTintView
@@ -57,9 +58,12 @@ final class OverlayPanel: NSPanel {
     override var canBecomeKey: Bool { true }
     override var canBecomeMain: Bool { false }
 
-    override init(contentRect: NSRect, styleMask style: NSWindow.StyleMask,
-                  backing backingStoreType: NSWindow.BackingStoreType, defer flag: Bool) {
-        super.init(contentRect: contentRect, styleMask: style, backing: backingStoreType, defer: flag)
+    override init(
+        contentRect: NSRect, styleMask style: NSWindow.StyleMask,
+        backing backingStoreType: NSWindow.BackingStoreType, defer flag: Bool
+    ) {
+        super.init(
+            contentRect: contentRect, styleMask: style, backing: backingStoreType, defer: flag)
 
         isOpaque = false
         backgroundColor = .clear

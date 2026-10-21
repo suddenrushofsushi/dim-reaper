@@ -1,0 +1,22 @@
+name: Feature request
+description: Suggest a change to Nightprism
+title: ""
+labels: []
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or use case
+      description: What are you trying to do, and what is missing?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Describe how you would expect this to work.
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Add examples or images if they help explain the request.

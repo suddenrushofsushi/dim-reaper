@@ -1,0 +1,31 @@
+name: Bug report
+description: Report a problem with Nightprism
+title: ""
+labels: []
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the problem and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: List the steps that reproduce the problem, if known.
+      placeholder: |
+        1. Open Nightprism
+        2. Add an overlay
+        3. Change its opacity
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version
+      placeholder: e.g. macOS 27.0
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Add logs or screenshots if they help explain the problem.

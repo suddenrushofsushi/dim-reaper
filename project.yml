@@ -8,7 +8,7 @@ options:
 
 settings:
   base:
-    SWIFT_VERSION: "5.10"
+    SWIFT_VERSION: "6.0"
     SWIFT_STRICT_CONCURRENCY: complete
     MACOSX_DEPLOYMENT_TARGET: "14.0"
     DEAD_CODE_STRIPPING: YES
@@ -35,7 +35,7 @@ targets:
         CFBundleVersion: "1"
         LSMinimumSystemVersion: "14.0"
         LSUIElement: true   # Menubar-only app; no Dock icon, no main menu hijack.
-        NSHumanReadableCopyright: "© 2026 Chris Waterman"
+        NSHumanReadableCopyright: "© 2026 Craig Waterman"
         NSHighResolutionCapable: true
     entitlements:
       path: Resources/Nightprism.entitlements
@@ -48,3 +48,24 @@ targets:
         MARKETING_VERSION: "0.1.0"
         CURRENT_PROJECT_VERSION: "1"
         METAL_LANGUAGE_REVISION: UseDeploymentTarget
+
+  NightprismTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: Tests
+    dependencies:
+      - target: Nightprism
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+
+schemes:
+  Nightprism:
+    build:
+      targets:
+        Nightprism: all
+    test:
+      targets:
+        - NightprismTests
+      gatherCoverageData: true

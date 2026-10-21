@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  macos:
+    # Xcode 27 is currently a public-preview image; this label is documented by actions/runner-images.
+    runs-on: xcode-27
+    timeout-minutes: 30
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_27.1.app/Contents/Developer
+      DERIVED_DATA: .build/ci/DerivedData
+
+    steps:
+      # actions/checkout v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Select Xcode 27.1
+        run: |
+          test -d "$DEVELOPER_DIR"
+          xcodebuild -version | grep --fixed-strings --line-regexp 'Xcode 27.1'
+
+      - name: Ensure Metal toolchain is available
+        run: |
+          if ! xcrun metal --version >/dev/null 2>&1; then
+            xcodebuild -downloadComponent metalToolchain
+          fi
+
+      - name: Install XcodeGen 2.46.0
+        run: |
+          curl --fail --location --silent --show-error \
+            https://github.com/yonaskolb/XcodeGen/releases/download/2.46.0/xcodegen.zip \
+            --output "$RUNNER_TEMP/xcodegen.zip"
+          echo '4d9e34b62172d645eed6457cac13fc222569974098ef4ee9c3368bedf0196806  '"$RUNNER_TEMP/xcodegen.zip" | shasum --check --status
+          mkdir -p "$RUNNER_TEMP/xcodegen"
+          ditto -x -k "$RUNNER_TEMP/xcodegen.zip" "$RUNNER_TEMP/xcodegen"
+          echo "$RUNNER_TEMP/xcodegen/xcodegen/bin" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/xcodegen/xcodegen/bin/xcodegen" version | grep --fixed-strings --line-regexp 'Version: 2.46.0'
+
+      - name: Generate Xcode project
+        run: xcodegen generate --spec project.yml
+
+      - name: Lint Swift
+        run: swift format lint --strict --recursive Sources Tests
+
+      - name: Build Debug
+        run: >-
+          xcodebuild build
+          -project Nightprism.xcodeproj
+          -scheme Nightprism
+          -configuration Debug
+          -destination 'platform=macOS'
+          -derivedDataPath "$DERIVED_DATA"
+          CODE_SIGNING_ALLOWED=NO
+          CODE_SIGNING_REQUIRED=NO
+
+      - name: Run Swift Testing tests
+        run: >-
+          xcodebuild test
+          -project Nightprism.xcodeproj
+          -scheme Nightprism
+          -configuration Debug
+          -destination 'platform=macOS'
+          -derivedDataPath "$DERIVED_DATA"
+          CODE_SIGNING_ALLOWED=NO
+          CODE_SIGNING_REQUIRED=NO
+
+      - name: Build Release
+        run: >-
+          xcodebuild build
+          -project Nightprism.xcodeproj
+          -scheme Nightprism
+          -configuration Release
+          -destination 'platform=macOS'
+          -derivedDataPath "$DERIVED_DATA"
+          CODE_SIGNING_ALLOWED=NO
+          CODE_SIGNING_REQUIRED=NO
