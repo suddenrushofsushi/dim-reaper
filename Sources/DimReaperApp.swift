@@ -1,11 +1,11 @@
 import SwiftUI
 
 @main
-struct NightprismApp: App {
-    @State private var store = OverlayStore()
+struct DimReaperApp: App {
+    @State private var store = OverlayStore(legacyDomainName: "com.cwaterman.Nightprism")
 
     var body: some Scene {
-        Window("Nightprism Controls", id: "controls") {
+        Window("Dim Reaper Controls", id: "controls") {
             MenuBarContent(store: store, showsOpenControls: false)
         }
         .windowResizability(.contentSize)

@@ -1,4 +1,4 @@
-name: Nightprism
+name: DimReaper
 options:
   bundleIdPrefix: com.cwaterman
   deploymentTarget:
@@ -18,7 +18,7 @@ settings:
     # Local-dev signing. Switch to "Apple Development" / a team ID before distributing.
 
 targets:
-  Nightprism:
+  DimReaper:
     type: application
     platform: macOS
     sources:
@@ -29,44 +29,44 @@ targets:
     info:
       path: Resources/Info.plist
       properties:
-        CFBundleName: Nightprism
-        CFBundleDisplayName: Nightprism
+        CFBundleName: Dim Reaper
+        CFBundleDisplayName: Dim Reaper
         CFBundleShortVersionString: "0.1.0"
         CFBundleVersion: "1"
         LSMinimumSystemVersion: "14.0"
         LSUIElement: true   # Menubar-only app; no Dock icon, no main menu hijack.
         NSHumanReadableCopyright: "© 2026 Craig Waterman"
         NSHighResolutionCapable: true
-        NSScreenCaptureUsageDescription: "Nightprism uses window information to attach dimming overlays to the windows you choose. This prototype does not record or save screen images."
+        NSScreenCaptureUsageDescription: "Dim Reaper uses window information to attach dimming overlays to the windows you choose. This prototype does not record or save screen images."
     entitlements:
-      path: Resources/Nightprism.entitlements
+      path: Resources/DimReaper.entitlements
       properties:
         com.apple.security.app-sandbox: false
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.cwaterman.Nightprism
+        PRODUCT_BUNDLE_IDENTIFIER: com.cwaterman.DimReaper
         GENERATE_INFOPLIST_FILE: NO
         MARKETING_VERSION: "0.1.0"
         CURRENT_PROJECT_VERSION: "1"
         METAL_LANGUAGE_REVISION: UseDeploymentTarget
 
-  NightprismTests:
+  DimReaperTests:
     type: bundle.unit-test
     platform: macOS
     sources:
       - path: Tests
     dependencies:
-      - target: Nightprism
+      - target: DimReaper
     settings:
       base:
         GENERATE_INFOPLIST_FILE: YES
 
 schemes:
-  Nightprism:
+  DimReaper:
     build:
       targets:
-        Nightprism: all
+        DimReaper: all
     test:
       targets:
-        - NightprismTests
+        - DimReaperTests
       gatherCoverageData: true

@@ -15,7 +15,7 @@ struct MenuBarContent: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("Nightprism").font(.headline)
+                Text("Dim Reaper").font(.headline)
                 Spacer()
                 Button(store.isPaused ? "Resume all" : "Pause all") { store.togglePause() }
                     .disabled(store.overlays.isEmpty)
@@ -58,7 +58,7 @@ struct MenuBarContent: View {
                     .keyboardShortcut(",")
                 }
                 Spacer()
-                Button("Quit Nightprism") { NSApplication.shared.terminate(nil) }
+                Button("Quit Dim Reaper") { NSApplication.shared.terminate(nil) }
                     .keyboardShortcut("q")
             }
         }
@@ -70,14 +70,14 @@ struct MenuBarContent: View {
         VStack(alignment: .leading, spacing: 8) {
             if needsWindowAccess {
                 Text(
-                    "Allow Screen Recording access so Nightprism can find your windows. This prototype does not record images."
+                    "Allow Screen Recording access so Dim Reaper can find your windows. This prototype does not record images."
                 )
                 .font(.callout)
                 Button("Allow Window Access") {
                     _ = CGRequestScreenCaptureAccess()
                     Task { await refreshWindows() }
                 }
-                Text("After allowing access in System Settings, refresh or relaunch Nightprism.")
+                Text("After allowing access in System Settings, refresh or relaunch Dim Reaper.")
                     .font(.caption).foregroundStyle(.secondary)
             }
             HStack {
