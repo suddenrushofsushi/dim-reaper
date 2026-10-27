@@ -1,11 +1,11 @@
 import AppKit
 import Testing
 
-@testable import Nightprism
+@testable import DimReaper
 
 @MainActor
 struct OverlayStoreTests {
-    private let suiteName = "NightprismTests.\(UUID().uuidString)"
+    private let suiteName = "DimReaperTests.\(UUID().uuidString)"
     private let defaults: UserDefaults
 
     init() throws {
@@ -85,7 +85,7 @@ struct OverlayStoreTests {
 
         #expect(store.overlays.isEmpty)
         #expect(windows.controllers.isEmpty)
-        #expect(defaults.data(forKey: "Nightprism.overlays.v1") == nil)
+        #expect(defaults.data(forKey: "DimReaper.overlays.v1") == nil)
     }
 
     @Test
@@ -107,12 +107,113 @@ struct OverlayStoreTests {
             ])
         #expect(restored.overlays.first?.warmth == 0)
         #expect(restored.overlays.first?.isEnabled == true)
+        #expect(defaults.data(forKey: "DimReaper.overlays.v1") != nil)
+    }
+
+    @Test
+    func migratesLegacyDomainWithoutChangingItsBackup() throws {
+        let legacyDomain = suiteName + ".legacy"
+        defer {
+            defaults.removePersistentDomain(forName: suiteName)
+            defaults.removePersistentDomain(forName: legacyDomain)
+        }
+        let id = UUID()
+        let data = legacyPayload(id: id)
+        defaults.setPersistentDomain(["Nightprism.overlays.v1": data], forName: legacyDomain)
+
+        let store = makeStore(windows: TestWindows(), legacyDomainName: legacyDomain)
+
+        #expect(
+            store.overlays == [
+                Overlay(
+                    id: id, frame: CGRect(x: -300, y: 140, width: 420, height: 270),
+                    opacity: 0.62, locked: true, warmth: 0.4, isEnabled: false)
+            ])
+        #expect(defaults.data(forKey: "DimReaper.overlays.v1") != nil)
+        #expect(
+            defaults.persistentDomain(forName: legacyDomain)?["Nightprism.overlays.v1"] as? Data
+                == data)
+        #expect(makeStore(windows: TestWindows()).overlays == store.overlays)
+    }
+
+    @Test
+    func currentSettingsTakePrecedenceOverLegacyDomain() throws {
+        let legacyDomain = suiteName + ".legacy"
+        defer {
+            defaults.removePersistentDomain(forName: suiteName)
+            defaults.removePersistentDomain(forName: legacyDomain)
+        }
+        let current = makeStore(windows: TestWindows())
+        current.addOverlay()
+        let overlay = try #require(current.overlays.first)
+        current.setOpacity(0.23, id: overlay.id)
+        defaults.setPersistentDomain(
+            ["Nightprism.overlays.v1": legacyPayload(id: UUID())], forName: legacyDomain)
+
+        let restored = makeStore(windows: TestWindows(), legacyDomainName: legacyDomain)
+
+        #expect(restored.overlays == current.overlays)
+        #expect(restored.overlays.first?.opacity == 0.23)
+    }
+
+    @Test
+    func deletingMigratedRectanglesDoesNotResurrectLegacySettings() throws {
+        let legacyDomain = suiteName + ".legacy"
+        defer {
+            defaults.removePersistentDomain(forName: suiteName)
+            defaults.removePersistentDomain(forName: legacyDomain)
+        }
+        defaults.setPersistentDomain(
+            ["Nightprism.overlays.v1": legacyPayload(id: UUID())], forName: legacyDomain)
+        let migrated = makeStore(windows: TestWindows(), legacyDomainName: legacyDomain)
+        migrated.remove(try #require(migrated.overlays.first).id)
+
+        let restored = makeStore(windows: TestWindows(), legacyDomainName: legacyDomain)
+
+        #expect(restored.overlays.isEmpty)
+        #expect(defaults.data(forKey: "DimReaper.overlays.v1") != nil)
+    }
+
+    @Test
+    func corruptCurrentSettingsDoNotFallBackToLegacyRectangles() {
+        let legacyDomain = suiteName + ".legacy"
+        defer {
+            defaults.removePersistentDomain(forName: suiteName)
+            defaults.removePersistentDomain(forName: legacyDomain)
+        }
+        let invalid = Data("invalid JSON".utf8)
+        defaults.set(invalid, forKey: "DimReaper.overlays.v1")
+        defaults.setPersistentDomain(
+            ["Nightprism.overlays.v1": legacyPayload(id: UUID())], forName: legacyDomain)
+        let windows = TestWindows()
+
+        let store = makeStore(windows: windows, legacyDomainName: legacyDomain)
+
+        #expect(store.overlays.isEmpty)
+        #expect(windows.controllers.isEmpty)
+        #expect(defaults.data(forKey: "DimReaper.overlays.v1") == invalid)
+    }
+
+    @Test
+    func corruptLegacySettingsDoNotCreateCurrentSettings() {
+        let legacyDomain = suiteName + ".legacy"
+        defer {
+            defaults.removePersistentDomain(forName: suiteName)
+            defaults.removePersistentDomain(forName: legacyDomain)
+        }
+        defaults.setPersistentDomain(
+            ["Nightprism.overlays.v1": Data("invalid JSON".utf8)], forName: legacyDomain)
+
+        let store = makeStore(windows: TestWindows(), legacyDomainName: legacyDomain)
+
+        #expect(store.overlays.isEmpty)
+        #expect(defaults.object(forKey: "DimReaper.overlays.v1") == nil)
     }
 
     @Test
     func handlesCorruptPersistenceWithoutOpeningWindows() {
         defer { defaults.removePersistentDomain(forName: suiteName) }
-        defaults.set(Data("invalid JSON".utf8), forKey: "Nightprism.overlays.v1")
+        defaults.set(Data("invalid JSON".utf8), forKey: "DimReaper.overlays.v1")
         let windows = TestWindows()
 
         let store = makeStore(windows: windows)
@@ -317,9 +418,12 @@ struct OverlayStoreTests {
         #expect(store.overlays.first?.shouldShow == false)
     }
 
-    private func makeStore(windows: TestWindows, trackers: TestTrackers? = nil) -> OverlayStore {
+    private func makeStore(
+        windows: TestWindows, trackers: TestTrackers? = nil, legacyDomainName: String? = nil
+    ) -> OverlayStore {
         OverlayStore(
             defaults: defaults,
+            legacyDomainName: legacyDomainName,
             trackerFactory: { trackers?.makeTracker() ?? TestWindowTracker() },
             controllerFactory: { overlay, _ in
                 let controller = TestWindow()
@@ -327,6 +431,13 @@ struct OverlayStoreTests {
                 return controller
             }
         )
+    }
+
+    private func legacyPayload(id: UUID) -> Data {
+        Data(
+            """
+            [{"id":"\(id.uuidString)","x":-300,"y":140,"w":420,"h":270,"opacity":0.62,"locked":true,"warmth":0.4,"enabled":false}]
+            """.utf8)
     }
 
     private func makeTarget(

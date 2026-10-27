@@ -2,7 +2,7 @@
 
 ## Development setup
 
-Nightprism is a macOS 14 or newer menu bar app. Development uses Xcode 27.1 with Swift 6.4 in Swift 6 mode, plus XcodeGen 2.46.0.
+Dim Reaper is a macOS 14 or newer menu bar app. Development uses Xcode 27.1 with Swift 6.4 in Swift 6 mode, plus XcodeGen 2.46.0.
 
 Install Xcode and XcodeGen, then generate the project:
 
@@ -10,7 +10,7 @@ Install Xcode and XcodeGen, then generate the project:
 xcodegen generate
 ```
 
-`project.yml` is authoritative. The generated `Nightprism.xcodeproj` is ignored and should not be committed.
+`project.yml` is authoritative. The generated `DimReaper.xcodeproj` is ignored and should not be committed.
 
 The Metal toolchain is required to build. If it is not installed, add it with:
 
@@ -23,7 +23,7 @@ xcodebuild -downloadComponent metalToolchain
 Run the test action with signing disabled:
 
 ```sh
-xcodebuild -project Nightprism.xcodeproj -scheme Nightprism -configuration Debug -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO test
+xcodebuild -project DimReaper.xcodeproj -scheme DimReaper -configuration Debug -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO test
 ```
 
 Check Swift formatting with:

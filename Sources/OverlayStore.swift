@@ -17,14 +17,17 @@ final class OverlayStore {
     @ObservationIgnored private var trackers: [Overlay.ID: any WindowTracking] = [:]
     @ObservationIgnored private var occluders: [Overlay.ID: [CGRect]] = [:]
     @ObservationIgnored private let defaults: UserDefaults
+    @ObservationIgnored private let legacyDomainName: String?
     @ObservationIgnored private let trackerFactory: @MainActor () -> any WindowTracking
     @ObservationIgnored private let controllerFactory:
         @MainActor (Overlay, OverlayStore) -> any OverlayWindowControlling
 
-    private let persistenceKey = "Nightprism.overlays.v1"
+    private let persistenceKey = "DimReaper.overlays.v1"
+    private static let legacyPersistenceKey = "Nightprism.overlays.v1"
 
     init(
         defaults: UserDefaults = .standard,
+        legacyDomainName: String? = nil,
         trackerFactory: @escaping @MainActor () -> any WindowTracking = { WindowTracker() },
         controllerFactory:
             @escaping @MainActor (Overlay, OverlayStore) -> any OverlayWindowControlling = {
@@ -32,6 +35,7 @@ final class OverlayStore {
             }
     ) {
         self.defaults = defaults
+        self.legacyDomainName = legacyDomainName
         self.trackerFactory = trackerFactory
         self.controllerFactory = controllerFactory
         load()
@@ -200,10 +204,28 @@ final class OverlayStore {
     }
 
     private func load() {
-        guard let data = defaults.data(forKey: persistenceKey),
-            let payload = try? JSONDecoder().decode([OverlayDTO].self, from: data)
-        else { return }
+        let data: Data
+        let isMigration: Bool
+        if defaults.object(forKey: persistenceKey) != nil {
+            // Even an empty or corrupt current value takes precedence: never resurrect
+            // old rectangles after the user has deleted them in Dim Reaper.
+            guard let saved = defaults.data(forKey: persistenceKey) else { return }
+            data = saved
+            isMigration = false
+        } else {
+            let legacy =
+                defaults.data(forKey: Self.legacyPersistenceKey)
+                ?? legacyDomainName.flatMap {
+                    defaults.persistentDomain(forName: $0)?[Self.legacyPersistenceKey] as? Data
+                }
+            guard let legacy else { return }
+            data = legacy
+            isMigration = true
+        }
+        guard let payload = try? JSONDecoder().decode([OverlayDTO].self, from: data) else { return }
         overlays = payload.map { $0.toOverlay() }
+        // Copy valid settings to the new domain/key, retaining the old data as a backup.
+        if isMigration { persist() }
         for overlay in overlays { present(overlay) }
     }
 

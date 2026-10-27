@@ -1,7 +1,7 @@
 import AppKit
 import Testing
 
-@testable import Nightprism
+@testable import DimReaper
 
 @MainActor
 struct OverlayWindowControllerTests {
@@ -107,7 +107,7 @@ struct OverlayWindowControllerTests {
         overlay.isEnabled = true
         harness.controller.apply(overlay)
         let window = try #require(harness.controller.window)
-        let title = "Nightprism metadata test \(UUID().uuidString)"
+        let title = "DimReaper metadata test \(UUID().uuidString)"
         window.title = title
         window.level = .normal
         window.setFrame(CGRect(x: 35, y: 35, width: 103, height: 97), display: true)
@@ -138,7 +138,7 @@ struct OverlayWindowControllerTests {
         let id = try #require((row[kCGWindowNumber as String] as? NSNumber)?.uint32Value)
         let target = WindowTarget(
             id: id, ownerPID: ProcessInfo.processInfo.processIdentifier,
-            appName: "Nightprism", title: title, frame: window.frame)
+            appName: "DimReaper", title: title, frame: window.frame)
         let provider = SystemWindowSnapshotProvider()
         guard
             case .visible(let snapshot) = await provider.snapshot(
@@ -214,7 +214,7 @@ struct OverlayWindowControllerTests {
         let target = WindowTarget(
             id: try #require(targetID),
             ownerPID: ProcessInfo.processInfo.processIdentifier,
-            appName: "Nightprism",
+            appName: "DimReaper",
             title: "target window",
             frame: targetFrame
         )
@@ -241,7 +241,7 @@ struct OverlayWindowControllerTests {
     }
 
     private func makeHarness(overlay: Overlay) throws -> Harness {
-        let suiteName = "NightprismControllerTests.\(UUID().uuidString)"
+        let suiteName = "DimReaperControllerTests.\(UUID().uuidString)"
         let defaults = try #require(UserDefaults(suiteName: suiteName))
         let store = OverlayStore(
             defaults: defaults,

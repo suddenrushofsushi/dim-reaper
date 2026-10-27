@@ -1,7 +1,7 @@
 import CoreGraphics
 import Testing
 
-@testable import Nightprism
+@testable import DimReaper
 
 struct WindowTargetTests {
     @Test

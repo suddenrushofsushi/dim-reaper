@@ -2,7 +2,7 @@ import CoreGraphics
 import Foundation
 import Testing
 
-@testable import Nightprism
+@testable import DimReaper
 
 @MainActor
 struct WindowTrackerTests {

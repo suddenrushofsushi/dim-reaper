@@ -1,11 +1,11 @@
-# Nightprism
+# Dim Reaper
 
 A macOS menu bar app for dimming selected parts of your screen with translucent overlays.
 
-Nightprism is an early personal project for toning down bright content during Zoom screen sharing.
+Dim Reaper is an early personal project for toning down bright content during Zoom screen sharing.
 The manual prototype supports black dimming and a warm tint; Safari in light mode is the first
 effect-comparison target. Product direction is tracked in
-[GitHub issues](https://github.com/suddenrushofsushi/nightprism/issues).
+[GitHub issues](https://github.com/suddenrushofsushi/dim-reaper/issues).
 
 ## Current behavior
 
@@ -40,6 +40,16 @@ work without that permission.
 Local ad hoc rebuilds can invalidate a previous grant; reauthorize the current build in System Settings
 and relaunch if the chooser still requests access after a rebuild.
 
+### Moving from the Nightprism preview
+
+Quit the old Nightprism preview before launching Dim Reaper. Dim Reaper has a new app identity, so
+macOS requires fresh Screen Recording authorization when you choose a foreign window. On first
+launch, Dim Reaper copies saved free-standing rectangles and their appearance settings from the old
+preferences domain (`com.cwaterman.Nightprism`, key `Nightprism.overlays.v1`) to the new domain
+(`com.cwaterman.DimReaper`, key `DimReaper.overlays.v1`). Existing Dim Reaper settings take
+precedence. The old preferences domain stays in place as a backup. Window attachments are session
+only and must be selected again.
+
 ## Build and run
 
 Install Xcode and XcodeGen first. For a new Xcode installation, run these commands yourself to
@@ -56,10 +66,11 @@ Then install the Metal compiler and generate the project:
 ```sh
 xcodebuild -downloadComponent metalToolchain
 xcodegen generate
-open Nightprism.xcodeproj
+open DimReaper.xcodeproj
 ```
 
-Run the `Nightprism` scheme in Xcode. The app has a moon icon in the menu bar and no Dock icon.
+Run the `DimReaper` scheme in Xcode. The app is named **Dim Reaper**, has a moon icon in the menu
+bar, and has no Dock icon.
 Controls open in a normal window at launch, so they stay available while working in Safari or Zoom.
 Close that window to keep only the menu bar controls; **Open Controls** in the moon menu reopens it.
 
@@ -75,10 +86,10 @@ For an unattached region, use **New Rectangle** and enter editing mode to positi
 For a command-line development build:
 
 ```sh
-xcodebuild -project Nightprism.xcodeproj \
-  -scheme Nightprism -configuration Debug \
+xcodebuild -project DimReaper.xcodeproj \
+  -scheme DimReaper -configuration Debug \
   -destination 'platform=macOS' -derivedDataPath .build/local build
-open .build/local/Build/Products/Debug/Nightprism.app
+open .build/local/Build/Products/Debug/DimReaper.app
 ```
 
 The project uses local ad hoc signing. Signed and notarized distribution builds are not set up;
@@ -88,12 +99,12 @@ there are no downloadable releases yet.
 
 ```sh
 swift format lint --strict --recursive Sources Tests
-xcodebuild -project Nightprism.xcodeproj \
-  -scheme Nightprism -configuration Debug \
+xcodebuild -project DimReaper.xcodeproj \
+  -scheme DimReaper -configuration Debug \
   -destination 'platform=macOS' -derivedDataPath .build/local \
   CODE_SIGNING_ALLOWED=NO test
-xcodebuild -project Nightprism.xcodeproj \
-  -scheme Nightprism -configuration Release \
+xcodebuild -project DimReaper.xcodeproj \
+  -scheme DimReaper -configuration Release \
   -destination 'platform=macOS' -derivedDataPath .build/local \
   CODE_SIGNING_ALLOWED=NO build
 ```
@@ -108,7 +119,7 @@ in public preview, so availability may change. Workflow actions and XcodeGen dow
 
 ## Code map
 
-- `Sources/NightprismApp.swift`: app entry point and menu bar scene.
+- `Sources/DimReaperApp.swift`: app entry point and menu bar scene.
 - `Sources/MenuBarContent.swift`: per-overlay controls.
 - `Sources/OverlayStore.swift`: observable state, controller ownership, and versioned preferences.
 - `Sources/OverlayWindowController.swift`: AppKit panels, window behavior, and frame updates.
@@ -125,9 +136,9 @@ Regenerate after changing it. Generated Xcode projects and build products are ig
 ## Contributing and license
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for development conventions and manual smoke checks.
-Report bugs and discuss proposed features in [issues](https://github.com/suddenrushofsushi/nightprism/issues).
+Report bugs and discuss proposed features in [issues](https://github.com/suddenrushofsushi/dim-reaper/issues).
 Automatic bright-share detection, suspend/resume on content changes, and launch at login are later
 work. Pre-arm the selected Zoom window for the manual workflow; a reactive detector cannot prevent
 a bright frame it has not yet observed. Inversion and XOR effects are outside the current scope.
 
-Nightprism is licensed under the [MIT License](LICENSE). Copyright (c) 2026 Craig Waterman.
+Dim Reaper is licensed under the [MIT License](LICENSE). Copyright (c) 2026 Craig Waterman.
